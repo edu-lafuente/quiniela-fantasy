@@ -29,17 +29,25 @@ if (!isset($_SESSION['usuario_id'])) {
 $usuario_id = $_SESSION['usuario_id'];
 
 function obtenerPartidosPorJornada($pdo) {
+    // Obtener todas las jornadas
     $jornadas = $pdo->query('SELECT id, numero FROM jornadas ORDER BY id')->fetchAll();
+    
+    // Inicializar el array de partidos
     $partidosPorJornada = [];
+
     foreach ($jornadas as $jornada) {
+        // Preparar la consulta para obtener los partidos por jornada
         $stmt = $pdo->prepare('SELECT p.id, p.equipo1, p.equipo2, p.fecha FROM partidos p WHERE p.jornada_id = ?');
         $stmt->execute([$jornada['id']]);
         $partidos = $stmt->fetchAll();
+
         if (!empty($partidos)) {
+            // Solo agregamos a la variable si existen partidos en la jornada
             $partidosPorJornada[] = ['jornada' => $jornada, 'partidos' => $partidos];
         }
     }
-    return $partidosPorJornada;
+
+    return $partidosPorJornada;  // Retornamos el array de partidos
 }
 
 function obtenerJugadoresPorEquipo($pdo, $equipo1, $equipo2) {
@@ -104,7 +112,8 @@ $partidosPorJornada = obtenerPartidosPorJornada($pdo);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mi Quiniela de Goleadores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goleadores</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
@@ -112,13 +121,105 @@ $partidosPorJornada = obtenerPartidosPorJornada($pdo);
         body { font-family: 'Arial', sans-serif; background-color: #f4f4f9; }
         .container { margin-top: 40px; }
         .btn-primary:hover, .btn-success:hover { filter: brightness(0.9); }
-        .table th, .table td { vertical-align: middle; text-align: center; }
         .card { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border: 0; border-radius: 8px; }
         .card-header { background-color: #007bff; color: white; font-weight: bold; }
         .form-control { border-radius: 4px; }
         select:disabled, button:disabled { background-color: #f5f5f5; color: #aaa; }
-    </style>
 
+        /* Flexbox Layout */
+        .jornada-card {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+
+        }
+
+        .jornada-header {
+            background-color: #b30000;
+            color: white;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px 8px 8px 8px;
+            margin-bottom: 5px;
+        }
+
+        .partido {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .partido-header {
+            background-color: #67737e;
+            color: white;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px 8px 8px 8px;
+            margin-bottom: 5px;
+            text-align: center; /* Centra el texto horizontalmente */
+            display: flex;      /* Usa flexbox para centrar */
+            justify-content: center; /* Centra horizontalmente */
+            align-items: center;     /* Centra verticalmente */
+        }
+
+        .list-unstyled{
+            background-color: #ccffcc;
+            color: black;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px 8px 8px 8px;
+            text-align: center; /* Centra el texto horizontalmente */
+            display: flex;      /* Usa flexbox para centrar */
+            justify-content: center; /* Centra horizontalmente */
+            align-items: center;     /* Centra verticalmente */
+        }
+
+        .partido-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .partido-content > div {
+            flex: 1;
+        }
+
+          .btn-primary, .btn-success {
+                width: 100%; /* Botones al 100% de ancho en pantallas pequeñas */
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+
+            .form-inline {
+                flex-direction: column;
+            }
+
+
+            .form-inline select, .form-inline button {
+                width: 100%;
+            }
+
+        /* Estilo responsivo */
+        @media (max-width: 576px) {
+            .btn-primary, .btn-success {
+                width: 100%; /* Botones al 100% de ancho en pantallas pequeñas */
+                margin-bottom: 10px;
+            }
+
+            .form-inline {
+                flex-direction: column;
+            }
+
+            .form-inline select, .form-inline button {
+                width: 100%;
+            }
+        }
+    </style>
     <script>
         // Validación de JavaScript para verificar si se ha seleccionado un jugador
         $(document).ready(function () {
@@ -131,71 +232,39 @@ $partidosPorJornada = obtenerPartidosPorJornada($pdo);
             });
         });
     </script>
-
 </head>
 <body>
 <div class="container">
     <a href="ranking.php" class="btn btn-primary mb-3">Volver al Ranking</a>
-    <h1 class="text-center mb-4">Selecciona Goleadores</h1>
-    <?php foreach ($partidosPorJornada as $jornada): ?>
-        <div class="card mb-4">
-            <div class="card-header">
-                <?php echo htmlspecialchars($jornada['jornada']['numero']); ?>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Partido</th>
-                            <th>Fecha</th>
-                            <th>Jugador</th>
-                            <th>Goleadores</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($jornada['partidos'] as $partido): ?>
-                            <?php 
-                                $fecha_partido = date('Y-m-d', strtotime($partido['fecha']));
-                                $disabled = ($fecha_partido <= $fecha_actual) ? 'disabled' : '';
-                                $jugadores = obtenerJugadoresPorEquipo($pdo, $partido['equipo1'], $partido['equipo2']);
-                                $jugador_seleccionado = obtenerSeleccionJugador($pdo, $partido['id'], $usuario_id);
-                            ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($partido['equipo1']) . ' vs ' . htmlspecialchars($partido['equipo2']); ?></td>
-                                <td><?php echo date('d/m/Y', strtotime($partido['fecha'])); ?></td>
-                                <td>
-                                    <?php if ($jugador_seleccionado): ?>
-                                        <form method="POST" class="form-inline">
-                                            <select name="jugador_id" class="form-control mr-2" <?php echo $disabled; ?>>
-                                                <option value="">Selecciona un jugador</option>
-                                                <?php foreach ($jugadores as $jugador): ?>
-                                                    <option value="<?php echo $jugador['id']; ?>" <?php echo $jugador['id'] == $jugador_seleccionado ? 'selected' : ''; ?>>
-                                                        <?php echo htmlspecialchars($jugador['nombre']); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <input type="hidden" name="partido_id" value="<?php echo $partido['id']; ?>">
-                                            <button type="submit" class="btn btn-primary" <?php echo $disabled; ?>>Guardar</button>
-                                        </form>
-                                        <div class="alert alert-info mt-2">
-                                            Has elegido a <strong><?php echo htmlspecialchars($jugador_seleccionado); ?></strong> para este partido.
-                                        </div>
-                                    <?php else: ?>
-                                        <form method="POST" class="form-inline">
-                                            <select name="jugador_id" class="form-control mr-2" <?php echo $disabled; ?>>
-                                                <option value="">Selecciona un jugador</option>
-                                                <?php foreach ($jugadores as $jugador): ?>
-                                                    <option value="<?php echo $jugador['id']; ?>">
-                                                        <?php echo htmlspecialchars($jugador['nombre']); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <input type="hidden" name="partido_id" value="<?php echo $partido['id']; ?>">
-                                            <button type="submit" class="btn btn-primary" <?php echo $disabled; ?>>Guardar</button>
-                                        </form>
-                                    <?php endif; ?>
-                                </td>
-                               <td>
+    <h1 class="text-center mb-4"></h1>
+    <?php if (!empty($partidosPorJornada)): ?>
+        <?php foreach ($partidosPorJornada as $jornada): ?>
+            <div class="jornada-card">
+                <div class="jornada-header">
+                    <?php echo htmlspecialchars($jornada['jornada']['numero']); ?>
+                </div>
+                <?php foreach ($jornada['partidos'] as $partido): ?>
+                    <?php 
+                        $fecha_partido = date('Y-m-d', strtotime($partido['fecha']));
+                        $disabled = ($fecha_partido <= $fecha_actual) ? 'disabled' : '';
+                        $jugadores = obtenerJugadoresPorEquipo($pdo, $partido['equipo1'], $partido['equipo2']);
+                        $jugador_seleccionado = obtenerSeleccionJugador($pdo, $partido['id'], $usuario_id);
+                    ?>
+                    <div class="partido">
+                        <div class="partido-header">
+                            <?php echo htmlspecialchars($partido['equipo1']) . ' vs ' . htmlspecialchars($partido['equipo2']); ?>
+                            <br>
+                            <?php echo date('d/m/Y', strtotime($partido['fecha'])); ?>
+                        </div>
+                        <div class="partido-content">
+                            <div>
+                                
+                                <?php if ($jugador_seleccionado): ?>
+                                    <div class="alert alert-info mt-2">
+                                        Has elegido a <strong><?php echo htmlspecialchars($jugador_seleccionado); ?></strong> para este partido.
+                                    </div>
+                                <?php endif; ?>
+
                                 <?php
                                 $goleadores = obtenerGoleadoresPorPartido($pdo, $partido['id']);
                                 if ($goleadores): ?>
@@ -205,16 +274,38 @@ $partidosPorJornada = obtenerPartidosPorJornada($pdo);
                                         <?php endforeach; ?>
                                     </ul>
                                 <?php else: ?>
-                                    <p>No hay goleadores aún.</p>
+                                    <br>
+                                    <ul class="list-unstyled mb-0">
+                                    <li><strong>No hay goleadores aún</strong></li>
+                                    </ul>
                                 <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+<br>
+                                <form method="POST" class="form-inline">
+                                    <select name="jugador_id" class="form-control mr-2" <?php echo $disabled; ?>>
+                                        <option value="">Selecciona un jugador</option>
+                                        <?php foreach ($jugadores as $jugador): ?>
+                                            <option value="<?php echo $jugador['id']; ?>" <?php echo $jugador['id'] == $jugador_seleccionado ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($jugador['nombre']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+
+                                    <div class="form-group">
+                                        <input type="hidden" name="partido_id" value="<?php echo $partido['id']; ?>">
+                                        <button type="submit" class="btn btn-primary" <?php echo $disabled; ?>>Guardar</button>
+                                    </div>
+
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        </div>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <p>No hay partidos disponibles para mostrar.</p>
+    <?php endif; ?>
 </div>
 </body>
 </html>

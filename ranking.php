@@ -53,7 +53,6 @@ function obtenerGanador($resultado) {
 function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
     return $goleador_seleccionado === $goleador_real ? 1 : 0; // 1 punto por acertar el goleador
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -74,6 +73,8 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
         }
         h1, h2 {
             font-family: 'Helvetica', sans-serif;
+            font-size: 1.5rem;
+            color: white;
         }
         .table th, .table td {
             vertical-align: middle;
@@ -102,11 +103,12 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
             color: black;
         }
         .card {
-            background-color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: solid black;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.);
+            border: 1px solid #343a40;
         }
         .card-header {
-            background-color: #f8f9fa;
+            background-color: #343a40;
             font-weight: bold;
         }
         .card-body {
@@ -121,6 +123,17 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
         .text-muted {
             color: #6c757d;
         }
+
+        /* Ajustar botones para pantallas pequeñas */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-group .btn {
+            width: auto;
+        }
     </style>
 </head>
 <body>
@@ -130,10 +143,12 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
             Bienvenido, <?php echo htmlspecialchars($nombre_usuario); ?>
         </div>
         
-        <!-- Botón para cerrar sesión -->
-        <a href="logout.php" class="btn btn-danger mb-3">Cerrar sesión</a>
-        <a href='quiniela.php' class='btn btn-secondary mb-3 ml-2'>Quiniela</a>
-        <a href='quiniela_pichichi.php' class='btn btn-secondary mb-3 ml-2'>Goleadores</a>
+        <!-- Botones para cerrar sesión y navegar -->
+        <div class="btn-group">
+            <a href="logout.php" class="btn btn-danger mb-3">Cerrar sesión</a>
+            <a href='quiniela.php' class='btn btn-secondary mb-3'>Quiniela</a>
+            <a href='quiniela_pichichi.php' class='btn btn-secondary mb-3'>Goleadores</a>
+        </div>
 
         <!-- Mostrar ranking de partidos -->
         <div class="card">
@@ -156,7 +171,7 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
                             $ranking_partidos = [];
                             while ($row = $stmt->fetch()) {
                                 $puntos = 0;
-                                
+                                  
                                 // Verificar si el participante tiene selecciones de partidos
                                 $stmtSelecciones = $pdo->prepare(
                                     'SELECT s.resultado_seleccionado, pt.resultado FROM selecciones s 
@@ -164,7 +179,7 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
                                     WHERE s.participante_id = ?'
                                 );
                                 $stmtSelecciones->execute([$row['id']]);
-                                
+                                  
                                 $selecciones = $stmtSelecciones->fetchAll();
                                 if ($selecciones) {
                                     foreach ($selecciones as $seleccion) {
@@ -217,7 +232,7 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
                             $ranking_goleadores = [];
                             while ($row = $stmt->fetch()) {
                                 $puntos = 0;
-                                
+                                  
                                 // Verificar si el participante tiene selecciones de goleadores
                                 $stmtGoleadores = $pdo->prepare(
                                     'SELECT ps.jugador_id AS goleador_seleccionado, g.jugador_id AS goleador_real 
@@ -226,7 +241,7 @@ function calcularPuntosGoleadores($goleador_seleccionado, $goleador_real) {
                                      WHERE ps.usuario_id = ?'
                                 );
                                 $stmtGoleadores->execute([$row['id']]);
-                                
+                                  
                                 $goleadores = $stmtGoleadores->fetchAll();
                                 if ($goleadores) {
                                     foreach ($goleadores as $goleador) {

@@ -13,8 +13,6 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-
-
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
@@ -75,67 +73,53 @@ $partidosPorJornada = obtenerPartidosPorJornada($pdo, $usuario_id);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mi Quiniela</title>
+    <title>Quiniela</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <style>
         body { font-family: 'Arial', sans-serif; background-color: #f4f4f9; }
-        .container { margin-top: 40px; }
-        .btn-primary:hover, .btn-success:hover { filter: brightness(0.9); }
-        .table th, .table td { vertical-align: middle; }
-        .card { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-
-        /* Estilo del botón flotante centrado arriba */
+        .container { margin-top: 20px; padding: 15px; }
+        .btn { font-size: 1rem; padding: 10px 20px; }
+        .table-responsive { margin-bottom: 20px; }
+        .card { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); }
+        .card-header{
+            background-color: #343a40;
+            color: white;
+        }
         #comodinesBtn {
-            position: fixed;
-            left: 50%;
-            top: 20px;  /* Ajuste para que esté cerca de la parte superior */
+            position: fixed; left: 50%; top: 20px;
             transform: translateX(-50%);
-            background-color: lightblue;
-            color: black;
-            padding: 15px;
-            border-radius: 7px;
-            font-size: 18px;
-            z-index: 9999;
-            opacity: 0.9;
+            background-color: lightblue; color: black;
+            padding: 10px 15px; border-radius: 7px;
+            z-index: 9999; font-size: 1rem; opacity: 0.9;
         }
-        #comodinesBtn:hover {
-            background-color: lightseagreen;
-            opacity: 0.9;
-        }
-
-        /* Estilo del contenedor de comodines centrado arriba */
         #comodinesContainer {
-            position: fixed;
-            left: 50%;
-            top: 80px; /* Justo debajo del botón */
+            position: fixed; left: 50%; top: 60px;
             transform: translateX(-50%);
-            background-color: white;
-            padding: 10px;
-            border-radius: 7px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: none;
-            z-index: 9998;
-            opacity: 0.9;
+            background-color: white; padding: 10px;
+            border-radius: 7px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none; z-index: 9998; opacity: 0.9;
         }
-
-        #comodinesContainer h4 {
-            margin-bottom: 15px;
-
+        table th, table td { font-size: 0.9rem; }
+        
+        /* Responsividad para pantallas pequeñas */
+        @media (max-width: 768px) {
+            .btn { font-size: 0.85rem; padding: 8px 15px; }
+            .card-header h2 { font-size: 1rem; }
+            .table th, .table td { font-size: 0.8rem; }
+            .table-responsive { overflow-x: auto; }
+            .card-body { padding: 10px; }
+            .modal-content { width: 100%; }
+            #comodinesBtn { font-size: 0.9rem; }
         }
-
-        .comodin-item {
-            margin-bottom: 10px;
-
-        }
-
     </style>
 </head>
 <body>
 <div class="container">
     <a href="ranking.php" class="btn btn-primary mb-3">Volver al Ranking</a>
-    <h1 style="text-align: center;">Mi Quiniela</h1>
+    <h1 style="text-align: center;"></h1>
     <?php if (empty($partidosPorJornada)): ?>
         <div class="alert alert-warning" role="alert">
             No hay partidos registrados para las jornadas actuales.
@@ -147,160 +131,129 @@ $partidosPorJornada = obtenerPartidosPorJornada($pdo, $usuario_id);
                 <h2><?php echo htmlspecialchars($jornada['jornada']['numero']); ?></h2>
             </div>
             <div class="card-body">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr style="background-color: #B0E0E6;">
-                            <th>Partido</th>
-                            <th>Fecha</th>
-                            <th>Resultado Seleccionado</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($jornada['partidos'] as $partido): ?>
-                            <?php 
-                                // Obtener la fecha del partido
-                                $fecha_partido = $partido['fecha'];
-                                // Calcular el día anterior a la fecha del partido
-                                $fecha_maxima = date('Y-m-d', strtotime($fecha_partido . ' -1 day'));
-                                // Verificar si la fecha actual es antes de la fecha máxima permitida
-                                $permitir_resultado = (date('Y-m-d') <= $fecha_maxima);
-                                // Formatear la fecha del partido
-                                $fecha_formateada = date('d/m/Y', strtotime($fecha_partido));
-                            ?>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr style="background-color: #B0E0E6;">
+                                <th>Partido</th>
+                                <th>Pronóstico</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($jornada['partidos'] as $partido): ?>
+                                <?php 
+                                    // Obtener la fecha del partido
+                                    $fecha_partido = $partido['fecha'];
+                                    // Calcular el día anterior a la fecha del partido
+                                    $fecha_maxima = date('Y-m-d', strtotime($fecha_partido . ' -1 day'));
+                                    // Verificar si la fecha actual es antes de la fecha máxima permitida
+                                    $permitir_resultado = (date('Y-m-d') <= $fecha_maxima);
+                                    // Formatear la fecha del partido
+                                    $fecha_formateada = date('d/m/Y', strtotime($fecha_partido));
+                                ?>
 
-<tr>
-    <td style="text-align: center;">
-        <!-- Mostrar icono del primer equipo a la izquierda -->
-        <?php 
-            $equipo1 = htmlspecialchars($partido['equipo1']);
-            if ($equipo1 == 'Alavés') {
-                echo '<img src="iconos/alaves.png" alt="Alavés" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Athletic') {
-                echo '<img src="iconos/athletic.png" alt="Athletic" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Atlético') {
-                echo '<img src="iconos/atletico.png" alt="Atlético" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Barcelona') {
-                echo '<img src="iconos/barcelona.png" alt="Barcelona" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Betis') {
-                echo '<img src="iconos/betis.png" alt="Betis" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Celta') {
-                echo '<img src="iconos/celta.png" alt="Celta" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'R. Sociedad') {
-                echo '<img src="iconos/erreala.png" alt="R. Sociedad" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Espanyol') {
-                echo '<img src="iconos/espanyol.png" alt="Espanyol" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Getafe') {
-                echo '<img src="iconos/getafe.png" alt="Getafe" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Girona') {
-                echo '<img src="iconos/girona.png" alt="Girona" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Las Palmas') {
-                echo '<img src="iconos/laspalmas.png" alt="Las Palmas" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Leganés') {
-                echo '<img src="iconos/leganes.png" alt="Leganés" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Real Madrid') {
-                echo '<img src="iconos/madrid.png" alt="Real Madrid" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Mallorca') {
-                echo '<img src="iconos/mallorca.png" alt="Mallorca" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Osasuna') {
-                echo '<img src="iconos/osasuna.png" alt="Osasuna" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Rayo') {
-                echo '<img src="iconos/rayo.png" alt="Rayo" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Sevilla') {
-                echo '<img src="iconos/sevilla.png" alt="Sevilla" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Valencia') {
-                echo '<img src="iconos/valencia.png" alt="Valencia" width="30" height="30" style="margin-right: 5px;">';
-            } elseif ($equipo1 == 'Valladolid') {
-                echo '<img src="iconos/valladolid.png" alt="Valladolid" width="30" height="30" style="margin-right: 5px;">';
-            }elseif ($equipo1 == 'Villareal') {
-                echo '<img src="iconos/villareal.png" alt="Valladolid" width="30" height="30" style="margin-right: 5px;">';
-            }
-        ?>
-        
-        <strong><?php echo $equipo1; ?></strong>
+                                <tr>
 
-        <!-- Icono y nombre del segundo equipo -->
-        <strong style="color: #483D8B;"> <?php echo '-'; ?> </strong>
-        <strong>
-            <?php 
-                $equipo2 = htmlspecialchars($partido['equipo2']);
-                echo $equipo2;
-            ?>
-        </strong>
-        <!-- Mostrar icono del segundo equipo a la derecha -->
-        <?php 
-            if ($equipo2 == 'Alavés') {
-                echo '<img src="iconos/alaves.png" alt="Alavés" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Athletic') {
-                echo '<img src="iconos/athletic.png" alt="Athletic" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Atlético') {
-                echo '<img src="iconos/atletico.png" alt="Atlético" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Barcelona') {
-                echo '<img src="iconos/barcelona.png" alt="Barcelona" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Betis') {
-                echo '<img src="iconos/betis.png" alt="Betis" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Celta') {
-                echo '<img src="iconos/celta.png" alt="Celta" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'R. Sociedad') {
-                echo '<img src="iconos/erreala.png" alt="R. Sociedad" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Espanyol') {
-                echo '<img src="iconos/espanyol.png" alt="Espanyol" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Getafe') {
-                echo '<img src="iconos/getafe.png" alt="Getafe" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Girona') {
-                echo '<img src="iconos/girona.png" alt="Girona" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Las Palmas') {
-                echo '<img src="iconos/laspalmas.png" alt="Las Palmas" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Leganés') {
-                echo '<img src="iconos/leganes.png" alt="Leganés" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Real Madrid') {
-                echo '<img src="iconos/madrid.png" alt="Real Madrid" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Mallorca') {
-                echo '<img src="iconos/mallorca.png" alt="Mallorca" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Osasuna') {
-                echo '<img src="iconos/osasuna.png" alt="Osasuna" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Rayo') {
-                echo '<img src="iconos/rayo.png" alt="Rayo" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Sevilla') {
-                echo '<img src="iconos/sevilla.png" alt="Sevilla" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Valencia') {
-                echo '<img src="iconos/valencia.png" alt="Valencia" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Valladolid') {
-                echo '<img src="iconos/valladolid.png" alt="Valladolid" width="30" height="30" style="margin-left: 5px;">';
-            } elseif ($equipo2 == 'Villareal') {
-                echo '<img src="iconos/villareal.png" alt="Valladolid" width="30" height="30" style="margin-left: 5px;">';
-            }
-        ?>
-    </td>
-    <td style="text-align: center;"><?php echo $fecha_formateada; ?></td>
-    <td>
-        <?php echo $partido['resultado_seleccionado'] ? htmlspecialchars($partido['resultado_seleccionado']) : 'No introducido'; ?>
-    </td>
-    <td>
-        <?php if ($partido['resultado']): ?>
-            <!-- Si existe un resultado real, deshabilitar el botón -->
-            <button class="btn btn-secondary" disabled>Resultado Final: <?php echo htmlspecialchars($partido['resultado']); ?></button>
-        <?php elseif ($permitir_resultado && $partido['resultado_seleccionado'] == null): ?>
-            <!-- Si no hay resultado real ni seleccionado y la fecha permite introducirlo, habilitar el botón -->
-            <button class="btn btn-success" data-toggle="modal" data-target="#resultadoModal" data-partido-id="<?php echo $partido['id']; ?>" data-equipo1="<?php echo htmlspecialchars($partido['equipo1']); ?>" data-equipo2="<?php echo htmlspecialchars($partido['equipo2']); ?>">Introducir Resultado</button>
-        <?php elseif (!$permitir_resultado): ?>
-            <!-- Si no se puede introducir el resultado porque la fecha es posterior -->
-            <button class="btn btn-secondary" disabled>Fuera de plazo</button>
-        <?php else: ?>
-            <!-- Si hay un resultado seleccionado, deshabilitar el botón -->
-            <button class="btn btn-secondary" disabled>Resultado Seleccionado: <?php echo htmlspecialchars($partido['resultado_seleccionado']); ?></button>
-        <?php endif; ?>
-    </td>
-</tr>
+                                    <td 
+                                    style="
+                                    text-align: center; 
+                                    font-weight: bold; 
+                                    color: #333333;">
 
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                            <?php echo $fecha_formateada; ?>
+    
+                                        <div>
+                                            <?php 
+                                            $equipo1 = htmlspecialchars($partido['equipo1']);
+                                            $equipo2 = htmlspecialchars($partido['equipo2']);
+                                            // Array asociativo que mapea nombres de equipos a sus rutas de icono
+                                            $iconosEquipos = [
+                                                'Alavés' => 'alaves.png',
+                                                'Athletic' => 'athletic.png',
+                                                'Atlético' => 'atletico.png',
+                                                'Barcelona' => 'barcelona.png',
+                                                'Betis' => 'betis.png',
+                                                'Celta' => 'celta.png',
+                                                'R. Sociedad' => 'erreala.png',
+                                                'Espanyol' => 'espanyol.png',
+                                                'Getafe' => 'getafe.png',
+                                                'Girona' => 'girona.png',
+                                                'Las Palmas' => 'laspalmas.png',
+                                                'Leganés' => 'leganes.png',
+                                                'Real Madrid' => 'madrid.png',
+                                                'Mallorca' => 'mallorca.png',
+                                                'Osasuna' => 'osasuna.png',
+                                                'Rayo' => 'rayo.png',
+                                                'Sevilla' => 'sevilla.png',
+                                                'Valencia' => 'valencia.png',
+                                                'Valladolid' => 'valladolid.png',
+                                                'Villareal' => 'villareal.png'
+                                            ];
+
+                                            // Mostrar el icono correspondiente si el equipo existe en el array
+                                            if (array_key_exists($equipo1, $iconosEquipos)) {
+                                                echo '<img src="iconos/' . $iconosEquipos[$equipo1] . '" alt="' . $equipo1 . '" width="30" height="30" style="margin-right: 0px; margin-top: 5px;">';
+                                            }
+                                            ?>
+                                            <br>
+                                            <strong><?php echo $equipo1; ?></strong>
+
+                                        </div>
+                                            <?php echo '-' ?>
+                                        <div>
+
+                                            <strong><?php echo $equipo2; ?></strong>
+                                            <br>
+                                              <!-- Mostrar icono del segundo equipo a la derecha -->
+                                            <?php 
+                                            // Mostrar el icono correspondiente si el equipo existe en el array
+                                            if (array_key_exists($equipo2, $iconosEquipos)) {
+                                                echo '<img src="iconos/' . $iconosEquipos[$equipo2] . '" alt="' . $equipo2 . '" width="30" height="30" style="margin-left: 0px;">';
+                                            }
+                                            ?>
+
+                                        </div>  
+                                    </td>
+
+                                    <td style="
+                                    text-align: center; 
+                                    vertical-align: middle; 
+                                    font-weight: bold;
+                                    font-size: 1.5em;">
+
+                                    <!-- RESULTADO SELECCIONADO-->
+                                        <?php echo $partido['resultado_seleccionado'] ? htmlspecialchars($partido['resultado_seleccionado']) : ''; ?>
+                                    </td>
+
+                                    <td style="text-align: center; vertical-align: middle;">
+    <?php if ($partido['resultado']): ?>
+        <!-- Si existe un resultado real, deshabilitar el botón -->
+        <button class="btn btn-secondary" disabled>Resultado Final: <?php echo htmlspecialchars($partido['resultado']); ?></button>
+    <?php elseif ($permitir_resultado && $partido['resultado_seleccionado'] == null): ?>
+        <!-- Si no hay resultado real ni seleccionado y la fecha permite introducirlo, habilitar el botón -->
+        <button class="btn btn-success" data-toggle="modal" data-target="#resultadoModal" data-partido-id="<?php echo $partido['id']; ?>" data-equipo1="<?php echo htmlspecialchars($partido['equipo1']); ?>" data-equipo2="<?php echo htmlspecialchars($partido['equipo2']); ?>">Introducir Resultado</button>
+    <?php elseif (!$permitir_resultado): ?>
+        <!-- Si no se puede introducir el resultado porque la fecha es posterior -->
+        <button class="btn btn-secondary" disabled>Fuera de plazo</button>
+    <?php else: ?>
+        <!-- Si hay un resultado seleccionado, deshabilitar el botón -->
+        <button class="btn btn-secondary" disabled>Resultado Seleccionado: <?php echo htmlspecialchars($partido['resultado_seleccionado']); ?></button>
+    <?php endif; ?>
+</td>
+
+                                </tr>
+
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     <?php endforeach; ?>
 </div>
 
+<!-- Modal -->
 <div class="modal fade" id="resultadoModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -361,29 +314,6 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<!--
- <script>
-        function toggleComodinesContainer() {
-            var container = document.getElementById("comodinesContainer");
-            if (container.style.display === "none" || container.style.display === "") {
-                container.style.display = "block";
-            } else {
-                container.style.display = "none";
-            }
-        }
-</script>
-
-    <!-- Botón flotante de comodines
-    <button id="comodinesBtn" onclick="toggleComodinesContainer()">Comodines</button>
-
-    <!-- Contenedor de comodines
-    <div id="comodinesContainer">
-        <h4>Comodines Disponibles</h4>
-        <div class="comodin-item">x2: <?php echo $comodin_x2 > 0 ? $comodin_x2 : 'No disponible'; ?></div>
-        <div class="comodin-item">x3: <?php echo $comodin_x3 > 0 ? $comodin_x3 : 'No disponible'; ?></div>
-    </div>
--->
 
 </body>
 </html>

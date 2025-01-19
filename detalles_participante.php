@@ -37,7 +37,11 @@ function calcularPuntos($seleccion, $resultado) {
 }
 
 function obtenerGanador($resultado) {
-    list($goles1, $goles2) = explode('-', $resultado);
+    $goles = explode('-', $resultado);
+    if (count($goles) !== 2 || !is_numeric($goles[0]) || !is_numeric($goles[1])) {
+        return 'indefinido'; // Evita errores si el formato es incorrecto
+    }
+    list($goles1, $goles2) = $goles;
     if ($goles1 > $goles2) {
         return 'equipo1';
     } elseif ($goles2 > $goles1) {
@@ -45,6 +49,7 @@ function obtenerGanador($resultado) {
     }
     return 'empate';
 }
+
 
 function obtenerPuntosTotales($pdo, $participante_id) {
     $puntos = 0;
@@ -77,9 +82,11 @@ function obtenerPuntosTotales($pdo, $participante_id) {
         }
         .container {
             margin-top: 40px;
+
         }
         h1, h2 {
             font-family: 'Helvetica', sans-serif;
+            font-size: 1.5rem;
         }
         .table th, .table td {
             vertical-align: middle;
@@ -89,6 +96,7 @@ function obtenerPuntosTotales($pdo, $participante_id) {
             left: 125%;
             display: flex;
             align-items: center;
+
         }
         .btn-outline-warning{
           color: black !important;
@@ -97,6 +105,20 @@ function obtenerPuntosTotales($pdo, $participante_id) {
         .btn-secondary span img {
             width: 30px;
             height: 30px;
+        }
+        .card-header {
+            background-color: #343a40;
+            font-weight: bold;
+        }
+         /* Ajustar botones para pantallas pequeñas */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .btn-group .btn {
+            width: auto;
         }
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -123,27 +145,22 @@ if (isset($_GET['participante_id'])) {
         $cantidadX2 = $participante['comodin_x2'];
         $cantidadX3 = $participante['comodin_x3'];
 
-
-
         // Mostrar el botón solo si el participante es el mismo que el usuario actual
         if ($_SESSION['usuario_id'] == $participante_id) {
-            echo "<div class='container d-flex justify-content-between align-items-center'>
-                    <div>
+            echo "<div class='container d-flex justify-content-between align-items-center flex-column flex-sm-row'>
+                    <div class='btn-group'>
                         <a href='ranking.php' class='btn btn-primary mb-3'>Volver al Ranking</a>
                         <a href='quiniela.php' class='btn btn-secondary mb-3 ml-2'>Quiniela</a>
                         <a href='quiniela_pichichi.php' class='btn btn-secondary mb-3 ml-2'>Goleadores</a>
                     </div>
                 </div>";
-            }else{
-
+            } else {
                 echo "<div class='container d-flex justify-content-between align-items-center'>
-                    <div>
-                        <a href='ranking.php' class='btn btn-primary mb-3'>Volver al Ranking</a>
-                    </div>
-                </div>";
-
-
-        }
+                        <div>
+                            <a href='ranking.php' class='btn btn-primary mb-3'>Volver al Ranking</a>
+                        </div>
+                    </div>";
+            }
 
         echo "<div class='container'>
                 <div class='card'>
